@@ -141,7 +141,7 @@ yyc_start: // re2c 规则的起始标签
         // --- 规则：已内联 (之前导致错误的部分) ---
 
         // 标识符 (Identifier)
-        @yyt1 [\p{ID_Start}$_][\p{ID_Continue}$_\u200C\u200D]* {
+        @yyt1 [a-zA-Z_][a-zA-Z0-9_]* {
             YYACTION_RESET_ASI;
             size_t len = scanner->cursor - yyt1;
             yylval->str_val = strndup((const char*)yyt1, len);
