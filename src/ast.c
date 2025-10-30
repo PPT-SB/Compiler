@@ -96,6 +96,14 @@ ASTNode* create_return_statement(ASTNode *argument) {
     return node;
 }
 
+ASTNode* create_function_declaration(ASTNode *id, ASTNode *params, ASTNode *body) {
+    ASTNode *node = create_base_node(NODE_FUNCTION_DECLARATION);
+    node->data.func_decl.id = id;
+    node->data.func_decl.params = params;
+    node->data.func_decl.body = body;
+    return node;
+}
+
 ASTNode* create_binary_expr(BinaryOpType op, ASTNode *left, ASTNode *right) {
     ASTNode *node = create_base_node(NODE_BINARY_EXPRESSION);
     node->data.binary_expr.op = op;
@@ -227,6 +235,11 @@ void free_ast(ASTNode *node) {
         case NODE_RETURN_STATEMENT:
             free_ast(node->data.return_stmt.argument);
             break;
+        case NODE_FUNCTION_DECLARATION:
+            free_ast(node->data.func_decl.id);
+            free_ast(node->data.func_decl.params);
+            free_ast(node->data.func_decl.body);
+        break;
         case NODE_BINARY_EXPRESSION:
             free_ast(node->data.binary_expr.left);
             free_ast(node->data.binary_expr.right);
@@ -364,6 +377,15 @@ void print_ast(ASTNode *node, int indent) {
             printf("ReturnStatement\n");
             print_indent(indent + 1); printf("argument:\n");
             print_ast(node->data.return_stmt.argument, indent + 2);
+            break;
+        case NODE_FUNCTION_DECLARATION:
+            printf("FunctionDeclaration\n");
+            print_indent(indent + 1); printf("id:\n");
+            print_ast(node->data.func_decl.id, indent + 2);
+            print_indent(indent + 1); printf("params:\n");
+            print_ast(node->data.func_decl.params, indent + 2);
+            print_indent(indent + 1); printf("body:\n");
+            print_ast(node->data.func_decl.body, indent + 2);
             break;
         case NODE_BINARY_EXPRESSION:
             printf("BinaryExpression (op: %s)\n", bin_op_to_str(node->data.binary_expr.op));

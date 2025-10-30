@@ -16,6 +16,7 @@ typedef enum {
     NODE_IF_STATEMENT,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
+    NODE_FUNCTION_DECLARATION,
     NODE_BINARY_EXPRESSION,
     NODE_ASSIGNMENT_EXPRESSION,
     NODE_UNARY_EXPRESSION,
@@ -113,6 +114,13 @@ typedef struct ASTNode {
             struct ASTNode *argument; // (可选)
         } return_stmt;
 
+        // NODE_FUNCTION_DECLARATION
+        struct {
+            struct ASTNode *id;     // Identifier (函数名)
+            struct ASTNode *params; // NODE_ARGUMENT_LIST (参数列表)
+            struct ASTNode *body;   // NODE_BLOCK_STATEMENT (函数体)
+        } func_decl;
+
         // NODE_BINARY_EXPRESSION
         struct {
             BinaryOpType op;
@@ -169,6 +177,7 @@ ASTNode* create_this_node();
 ASTNode* create_if_statement(ASTNode *test, ASTNode *consequent, ASTNode *alternate);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
+ASTNode* create_function_declaration(ASTNode *id, ASTNode *params, ASTNode *body);
 ASTNode* create_binary_expr(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode* create_assignment_expr(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode* create_unary_expr(UnaryOpType op, ASTNode *argument, bool prefix); // 扩展了 API
