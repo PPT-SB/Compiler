@@ -1,0 +1,416 @@
+/* src/parser.y */
+
+/* C 声明区 (来自 3.1 节) */
+%{
+#include <stdio.h>
+#include <string.h>
+#include "common.h" // 包含 Scanner 定义
+#include "ast.h"    // 引入 AST 节点定义
+
+// 全局变量的声明 (在 main.c 中定义)
+extern Scanner *scanner;
+extern ASTNode *ast_root;
+
+/* 声明我们真正的词法分析器 (来自 lexer.re) */
+int real_yylex(YYSTYPE *yylval, Scanner *scanner);
+
+/*
+ * 包装函数：Bison 会调用这个 yylex(void)
+ */
+int yylex(void)
+{
+    /* 访问 Bison 生成的全局 yylval */
+    extern YYSTYPE yylval; 
+
+    /* 访问我们在 main.c 中定义的全局 scanner */
+    extern Scanner *scanner; 
+
+    /* 用正确的参数调用我们真正的词法分析器 */
+    return real_yylex(&yylval, scanner);
+}
+%}
+
+/* Bison 声明区 (来自 3.1 和 3.2 节) */
+%union {
+    char *str_val;
+    struct ASTNode *node; // *** 更新：使用 ast.h 中的类型 ***
+}
+
+/* 终结符 (Tokens) */
+%token <str_val> IDENTIFIER STRING_LITERAL NUMERIC_LITERAL
+
+/* Punctuators */
+%token LBRACE RBRACE LPAREN RPAREN LBRACK RBRACK DOT SEMICOLON COMMA
+%token LT GT LE GE EQ NE STRICT_EQ STRICT_NE
+%token PLUS MINUS MUL MOD POWER INC DEC
+%token LSHIFT RSHIFT URSHIFT BIT_AND BIT_OR BIT_XOR NOT BIT_NOT
+%token LOGICAL_AND LOGICAL_OR NULLISH_COALESCING
+%token CONDITIONAL COLON ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN POWER_ASSIGN
+%token ARROW SPREAD
+
+/* Keywords */
+%token BREAK CASE CATCH CLASS CONST CONTINUE DEBUGGER DEFAULT DELETE DO
+%token ELSE EXPORT EXTENDS FINALLY FOR FUNCTION IF IMPORT IN INSTANCEOF
+%token NEW RETURN SUPER SWITCH THIS THROW TRY TYPEOF VAR VOID WHILE WITH
+%token YIELD LET STATIC ENUM AWAIT
+
+/* Literals */
+%token TRUE_LITERAL FALSE_LITERAL NULL_LITERAL
+
+/* 非终结符的类型 */
+%type <node> Script statement_list_opt statement_list statement
+%type <node> block_statement variable_statement expression_statement if_statement
+%type <node> return_statement
+%type <node> variable_declaration_list variable_declaration
+%type <node> expression assignment_expression conditional_expression
+%type <node> logical_or_expression logical_and_expression bitwise_or_expression
+%type <node> bitwise_xor_expression bitwise_and_expression equality_expression
+%type <node> relational_expression shift_expression additive_expression
+%type <node> multiplicative_expression unary_expression update_expression
+%type <node> left_hand_side_expression new_expression call_expression
+%type <node> member_expression primary_expression arguments argument_list
+%type <node> expression_opt
+
+/* 优先级和结合性 (来自 3.2 节) */
+%left COMMA
+%right ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN POWER_ASSIGN CONDITIONAL ARROW
+%left LOGICAL_OR NULLISH_COALESCING
+%left LOGICAL_AND
+%left BIT_OR
+%left BIT_XOR
+%left BIT_AND
+%left EQ NE STRICT_EQ STRICT_NE
+%left LT LE GT GE IN INSTANCEOF
+%left LSHIFT RSHIFT URSHIFT
+%left PLUS MINUS
+%left MUL MOD
+%right POWER
+%right NOT BIT_NOT TYPEOF VOID DELETE AWAIT // 分离了 INC/DEC
+%right INC DEC // 前缀自增/自减
+%nonassoc UPOSTFIX // 模拟后缀
+%left DOT LBRACK
+
+/* 起始符号 */
+%start Script
+
+%%
+/* 文法规则区 (来自 3.3, 3.4, 4.4 节) */
+
+Script:
+    statement_list_opt
+    { ast_root = $1; } // $1 已经是 NULL 或一个 NODE_SCRIPT
+;
+
+statement_list_opt:
+    /* empty */
+    { $$ = NULL; } // 空列表返回 NULL
+| statement_list
+    { $$ = $1; }
+;
+
+statement_list:
+    statement
+    { $$ = create_statement_list($1, NULL); } // 创建 list wrapper
+|   statement_list statement
+    { $$ = append_to_list($1, $2); } // $1 是 wrapper, $2 是新语句
+;
+
+statement:
+    block_statement
+    { $$ = $1; }
+| variable_statement
+    { $$ = $1; }
+| if_statement
+    { $$ = $1; }
+| return_statement
+    { $$ = $1; }
+| expression_statement
+    { $$ = $1; }
+/* ... 此处应有其他语句类型: iteration_statement, break, continue 等 ... */
+;
+
+block_statement:
+    LBRACE statement_list_opt RBRACE
+    { $$ = create_block_statement($2); }
+;
+
+/* ASI 规则的实现 (来自 3.4 和 4.3 节) */
+optional_semicolon:
+    SEMICOLON
+| /* empty */ 
+    {
+        extern Scanner *scanner; // <-- 添加这一行
+        
+        if (!can_insert_semicolon(scanner)) {
+            yyerror("missing semicolon");
+            YYERROR;
+        }
+    }
+;
+
+variable_statement:
+    variable_declaration_list optional_semicolon
+    { $$ = $1; }
+;
+
+variable_declaration_list:
+    LET variable_declaration
+    { $$ = create_declaration_list(DECL_LET, $2, NULL); }
+| CONST variable_declaration
+    { $$ = create_declaration_list(DECL_CONST, $2, NULL); }
+| VAR variable_declaration
+    { $$ = create_declaration_list(DECL_VAR, $2, NULL); }
+| variable_declaration_list COMMA variable_declaration
+    { $$ = append_to_list($1, $3); }
+;
+
+variable_declaration:
+    IDENTIFIER
+    { $$ = create_variable_declarator(create_identifier_node($1), NULL); }
+| IDENTIFIER ASSIGN assignment_expression
+    { $$ = create_variable_declarator(create_identifier_node($1), $3); }
+;
+
+if_statement:
+    IF LPAREN expression RPAREN statement
+    { $$ = create_if_statement($3, $5, NULL); }
+| IF LPAREN expression RPAREN statement ELSE statement
+    { $$ = create_if_statement($3, $5, $7); }
+;
+
+expression_statement:
+    expression optional_semicolon
+    { $$ = create_expression_statement($1); }
+;
+
+/* 受限产生式 (来自 4.4 节) */
+expression_opt:
+    /* empty */
+    { $$ = NULL; }
+| expression
+    { $$ = $1; }
+;
+
+return_statement:
+    RETURN { scanner->restrict_new_line = true; } expression_opt optional_semicolon
+    { 
+        scanner->restrict_new_line = false; // 退出受限模式
+        $$ = create_return_statement($3);
+    }
+;
+
+/* --- 表达式 (来自 3.3 节) --- */
+expression:
+    assignment_expression
+    { $$ = $1; }
+| expression COMMA assignment_expression
+    { $$ = create_binary_expr(OP_COMMA, $1, $3); }
+;
+
+assignment_expression:
+    conditional_expression
+    { $$ = $1; }
+| left_hand_side_expression ASSIGN assignment_expression
+    { $$ = create_assignment_expr(OP_ASSIGN, $1, $3); }
+/* ... 其他赋值表达式 ... */
+;
+
+conditional_expression:
+    logical_or_expression
+    { $$ = $1; }
+/* ... TODO: 条件表达式 (?:) ... */
+;
+
+logical_or_expression:
+    logical_and_expression
+    { $$ = $1; }
+| logical_or_expression LOGICAL_OR logical_and_expression
+    { $$ = create_binary_expr(OP_LOGICAL_OR, $1, $3); }
+;
+
+logical_and_expression:
+    bitwise_or_expression
+    { $$ = $1; }
+| logical_and_expression LOGICAL_AND bitwise_or_expression
+    { $$ = create_binary_expr(OP_LOGICAL_AND, $1, $3); }
+;
+
+bitwise_or_expression:
+    bitwise_xor_expression
+    { $$ = $1; }
+| bitwise_or_expression BIT_OR bitwise_xor_expression
+    { $$ = create_binary_expr(OP_BIT_OR, $1, $3); }
+;
+
+bitwise_xor_expression:
+    bitwise_and_expression
+    { $$ = $1; }
+| bitwise_xor_expression BIT_XOR bitwise_and_expression
+    { $$ = create_binary_expr(OP_BIT_XOR, $1, $3); }
+;
+
+bitwise_and_expression:
+    equality_expression
+    { $$ = $1; }
+| bitwise_and_expression BIT_AND equality_expression
+    { $$ = create_binary_expr(OP_BIT_AND, $1, $3); }
+;
+
+equality_expression:
+    relational_expression
+    { $$ = $1; }
+| equality_expression EQ relational_expression
+    { $$ = create_binary_expr(OP_EQ, $1, $3); }
+| equality_expression NE relational_expression
+    { $$ = create_binary_expr(OP_NE, $1, $3); }
+| equality_expression STRICT_EQ relational_expression
+    { $$ = create_binary_expr(OP_STRICT_EQ, $1, $3); }
+| equality_expression STRICT_NE relational_expression
+    { $$ = create_binary_expr(OP_STRICT_NE, $1, $3); }
+;
+
+relational_expression:
+    shift_expression
+    { $$ = $1; }
+| relational_expression LT shift_expression
+    { $$ = create_binary_expr(OP_LT, $1, $3); }
+| relational_expression GT shift_expression
+    { $$ = create_binary_expr(OP_GT, $1, $3); }
+| relational_expression LE shift_expression
+    { $$ = create_binary_expr(OP_LE, $1, $3); }
+| relational_expression GE shift_expression
+    { $$ = create_binary_expr(OP_GE, $1, $3); }
+| relational_expression IN shift_expression
+    { $$ = create_binary_expr(OP_IN, $1, $3); }
+| relational_expression INSTANCEOF shift_expression
+    { $$ = create_binary_expr(OP_INSTANCEOF, $1, $3); }
+;
+
+shift_expression:
+    additive_expression
+    { $$ = $1; }
+| shift_expression LSHIFT additive_expression
+    { $$ = create_binary_expr(OP_LSHIFT, $1, $3); }
+| shift_expression RSHIFT additive_expression
+    { $$ = create_binary_expr(OP_RSHIFT, $1, $3); }
+| shift_expression URSHIFT additive_expression
+    { $$ = create_binary_expr(OP_URSHIFT, $1, $3); }
+;
+
+additive_expression:
+    multiplicative_expression
+    { $$ = $1; }
+| additive_expression PLUS multiplicative_expression
+    { $$ = create_binary_expr(OP_PLUS, $1, $3); }
+| additive_expression MINUS multiplicative_expression
+    { $$ = create_binary_expr(OP_MINUS, $1, $3); }
+;
+
+multiplicative_expression:
+    unary_expression
+    { $$ = $1; }
+| multiplicative_expression MUL unary_expression
+    { $$ = create_binary_expr(OP_MUL, $1, $3); }
+| multiplicative_expression MOD unary_expression
+    { $$ = create_binary_expr(OP_MOD, $1, $3); }
+| multiplicative_expression POWER unary_expression
+    { $$ = create_binary_expr(OP_POWER, $1, $3); }
+;
+
+unary_expression:
+    update_expression
+    { $$ = $1; }
+| DELETE unary_expression
+    { $$ = create_unary_expr(OP_DELETE, $2, true); }
+| VOID unary_expression
+    { $$ = create_unary_expr(OP_VOID, $2, true); }
+| TYPEOF unary_expression
+    { $$ = create_unary_expr(OP_TYPEOF, $2, true); }
+| INC unary_expression
+    { $$ = create_unary_expr(OP_INC, $2, true); }
+| DEC unary_expression
+    { $$ = create_unary_expr(OP_DEC, $2, true); }
+| PLUS unary_expression
+    { $$ = create_unary_expr(OP_UNARY_PLUS, $2, true); }
+| MINUS unary_expression
+    { $$ = create_unary_expr(OP_UNARY_MINUS, $2, true); }
+| BIT_NOT unary_expression
+    { $$ = create_unary_expr(OP_BIT_NOT, $2, true); }
+| NOT unary_expression
+    { $$ = create_unary_expr(OP_NOT, $2, true); }
+/* ... AWAIT ... */
+;
+
+update_expression:
+    left_hand_side_expression
+    { $$ = $1; }
+| left_hand_side_expression INC %prec UPOSTFIX
+    { $$ = create_unary_expr(OP_POST_INC, $1, false); }
+| left_hand_side_expression DEC %prec UPOSTFIX
+    { $$ = create_unary_expr(OP_POST_DEC, $1, false); }
+;
+
+left_hand_side_expression:
+    new_expression
+    { $$ = $1; }
+| call_expression
+    { $$ = $1; }
+;
+
+new_expression:
+    member_expression
+    { $$ = $1; }
+/* ... TODO: new 表达式规则 ... */
+;
+
+call_expression:
+    member_expression arguments
+    { $$ = create_call_expression($1, $2); }
+/* ... 其他调用表达式 (super(), import()) ... */
+;
+
+member_expression:
+    primary_expression
+    { $$ = $1; }
+| member_expression LBRACK expression RBRACK
+    { $$ = create_member_access($1, $3, true); }
+| member_expression DOT IDENTIFIER
+    { $$ = create_member_access($1, create_identifier_node($3), false); }
+;
+
+arguments:
+    LPAREN RPAREN
+    { $$ = create_argument_list(NULL, NULL); } // 空参数列表
+| LPAREN argument_list RPAREN
+    { $$ = $2; }
+;
+
+argument_list:
+    assignment_expression
+    { $$ = create_argument_list($1, NULL); } 
+| argument_list COMMA assignment_expression
+    { $$ = append_to_list($1, $3); }
+;
+
+primary_expression:
+    THIS
+    { $$ = create_this_node(); }
+| IDENTIFIER
+    { $$ = create_identifier_node($1); }
+| NUMERIC_LITERAL
+    { $$ = create_literal_node(LITERAL_NUMBER, $1); }
+| STRING_LITERAL
+    { $$ = create_literal_node(LITERAL_STRING, $1); }
+| TRUE_LITERAL
+    { $$ = create_literal_node(LITERAL_TRUE, strdup("true")); }
+| FALSE_LITERAL
+    { $$ = create_literal_node(LITERAL_FALSE, strdup("false")); }
+| NULL_LITERAL
+    { $$ = create_literal_node(LITERAL_NULL, strdup("null")); }
+| LPAREN expression RPAREN
+    { $$ = $2; } // 直接传递括号内表达式的节点
+;
+
+%%
+/* 附加 C 代码区 */
+/* (main 和 yyerror 已移至 main.c) */
