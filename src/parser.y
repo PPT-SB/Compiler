@@ -61,6 +61,7 @@ int yylex(void)
 %type <node> Script statement_list_opt statement_list statement
 %type <node> block_statement variable_statement expression_statement if_statement
 %type <node> return_statement
+%type <node> function_declaration
 %type <node> variable_declaration_list variable_declaration
 %type <node> expression assignment_expression conditional_expression
 %type <node> logical_or_expression logical_and_expression bitwise_or_expression
@@ -125,6 +126,8 @@ statement:
 | return_statement
     { $$ = $1; }
 | expression_statement
+    { $$ = $1; }
+| function_declaration
     { $$ = $1; }
 /* ... 此处应有其他语句类型: iteration_statement, break, continue 等 ... */
 ;
@@ -197,6 +200,11 @@ return_statement:
         scanner->restrict_new_line = false; // 退出受限模式
         $$ = create_return_statement($3);
     }
+;
+
+function_declaration:
+    FUNCTION IDENTIFIER arguments block_statement
+    { $$ = create_function_declaration(create_identifier_node($2), $3, $4); }
 ;
 
 /* --- 表达式 (来自 3.3 节) --- */
