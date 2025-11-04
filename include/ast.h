@@ -14,6 +14,7 @@ typedef enum {
     NODE_LITERAL,
     NODE_THIS_EXPRESSION,
     NODE_IF_STATEMENT,
+    NODE_WHILE_STATEMENT,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
     NODE_FUNCTION_DECLARATION,
@@ -76,13 +77,13 @@ typedef struct ASTNode {
     union {
         // NODE_SCRIPT, NODE_BLOCK_STATEMENT
         struct {
-            struct ASTNode *head; // 指向语句列表的第一个节点
+            NodeList *body;// 指向语句列表的第一个节点
         } script;
 
         // NODE_VARIABLE_DECLARATION
         struct {
             DeclarationType decl_type;
-            struct ASTNode *head; // 指向声明符列表的第一个节点
+            NodeList *declarations; // 指向声明符列表的第一个节点
         } var_decl;
 
         // NODE_VARIABLE_DECLARATOR
@@ -108,6 +109,12 @@ typedef struct ASTNode {
             struct ASTNode *consequent;
             struct ASTNode *alternate; // (可选) else
         } if_stmt;
+
+        // NODE_WHILE_STATEMENT
+        struct {
+            struct ASTNode *test;
+            struct ASTNode *body;
+        } while_stmt;
 
         // NODE_EXPRESSION_STATEMENT
         struct {
@@ -167,14 +174,15 @@ typedef struct ASTNode {
 // --- AST 辅助函数声明 ---
 
 // 创建节点
-ASTNode* create_statement_list(ASTNode *statement, ASTNode *ignored);
-ASTNode* create_block_statement(ASTNode *statement_list_head);
-ASTNode* create_declaration_list(DeclarationType type, ASTNode *declarator, ASTNode *ignored);
+ASTNode* create_block_statement(NodeList *body);
+ASTNode* create_declaration_list(DeclarationType type, NodeList *declarations);
 ASTNode* create_variable_declarator(ASTNode *id, ASTNode *init);
 ASTNode* create_identifier_node(char *name);
 ASTNode* create_literal_node(LiteralType type, char *value);
 ASTNode* create_this_node();
+ASTNode* create_script_node(NodeList *body);
 ASTNode* create_if_statement(ASTNode *test, ASTNode *consequent, ASTNode *alternate);
+ASTNode* create_while_statement(ASTNode *test, ASTNode *body);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
 ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);
@@ -183,7 +191,6 @@ ASTNode* create_assignment_expr(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode* create_unary_expr(UnaryOpType op, ASTNode *argument, bool prefix); // 扩展了 API
 ASTNode* create_call_expression(ASTNode *callee, NodeList *arguments);
 ASTNode* create_member_access(ASTNode *object, ASTNode *property, bool computed);
-ASTNode* append_to_list(ASTNode *list_wrapper, ASTNode *node_to_append);
 
 // ASI 辅助函数
 bool can_insert_semicolon(Scanner *scanner);

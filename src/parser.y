@@ -59,11 +59,16 @@ int yylex(void)
 %token TRUE_LITERAL FALSE_LITERAL NULL_LITERAL
 
 /* 非终结符的类型 */
-%type <node> Script statement_list_opt statement_list statement
-%type <node> block_statement variable_statement expression_statement if_statement
+%type <list> statement_list_opt
+%type <list> statement_list
+%type <node> statement
+%type <node> Script
+%type <node> block_statement variable_statement expression_statement if_statement iteration_statement while_statement 
 %type <node> return_statement
 %type <node> function_declaration
-%type <node> variable_declaration_list variable_declaration
+%type <list> variable_declaration_list_inner
+%type <node> variable_declaration
+%type <node> variable_declaration_list
 %type <node> expression assignment_expression conditional_expression
 %type <node> logical_or_expression logical_and_expression bitwise_or_expression
 %type <node> bitwise_xor_expression bitwise_and_expression equality_expression
@@ -102,21 +107,27 @@ int yylex(void)
 
 Script:
     statement_list_opt
-    { ast_root = $1; } // $1 已经是 NULL 或一个 NODE_SCRIPT
+    { ast_root = create_script_node($1); }
 ;
 
 statement_list_opt:
     /* empty */
-    { $$ = NULL; } // 空列表返回 NULL
+    { $$ = nodelist_create(); } // 返回一个空的 NodeList*
 | statement_list
-    { $$ = $1; }
+    { $$ = $1; } // $1 已经是一个 NodeList*
 ;
 
 statement_list:
-    statement
-    { $$ = create_statement_list($1, NULL); } // 创建 list wrapper
-|   statement_list statement
-    { $$ = append_to_list($1, $2); } // $1 是 wrapper, $2 是新语句
+    statement 
+    { 
+        $$ = nodelist_create(); 
+        nodelist_append($$, $1); 
+    }
+|   statement_list statement 
+    { 
+        nodelist_append($1, $2); // $1 是 NodeList*, $2 是新语句
+        $$ = $1; 
+    }
 ;
 
 statement:
@@ -132,7 +143,9 @@ statement:
     { $$ = $1; }
 | function_declaration
     { $$ = $1; }
-/* ... 此处应有其他语句类型: iteration_statement, break, continue 等 ... */
+| iteration_statement
+    { $$ = $1; }
+/* ... 此处应有其他语句类型:break, continue 等 ... */
 ;
 
 block_statement:
@@ -160,20 +173,33 @@ variable_statement:
 ;
 
 variable_declaration_list:
-    LET variable_declaration
-    { $$ = create_declaration_list(DECL_LET, $2, NULL); }
-| CONST variable_declaration
-    { $$ = create_declaration_list(DECL_CONST, $2, NULL); }
-| VAR variable_declaration
-    { $$ = create_declaration_list(DECL_VAR, $2, NULL); }
-| variable_declaration_list COMMA variable_declaration
-    { $$ = append_to_list($1, $3); }
+    LET variable_declaration_list_inner
+    { $$ = create_declaration_list(DECL_LET, $2); }
+|   CONST variable_declaration_list_inner
+    { $$ = create_declaration_list(DECL_CONST, $2); }
+|   VAR variable_declaration_list_inner
+    { $$ = create_declaration_list(DECL_VAR, $2); }
+;
+
+// variable_declaration_list_inner 是一个新的辅助规则
+// 它负责构建 NodeList*
+variable_declaration_list_inner:
+    variable_declaration
+    {
+        $$ = nodelist_create();
+        nodelist_append($$, $1);
+    }
+|   variable_declaration_list_inner COMMA variable_declaration
+    {
+        nodelist_append($1, $3);
+        $$ = $1;
+    }
 ;
 
 variable_declaration:
     IDENTIFIER
     { $$ = create_variable_declarator(create_identifier_node($1), NULL); }
-| IDENTIFIER ASSIGN assignment_expression
+|   IDENTIFIER ASSIGN assignment_expression
     { $$ = create_variable_declarator(create_identifier_node($1), $3); }
 ;
 
@@ -210,6 +236,16 @@ function_declaration:
     { $$ = create_function_declaration(create_identifier_node($2), $3, $4); }
 ;
 
+iteration_statement:
+    while_statement
+    { $$ = $1; }
+    // (未来可以在这里添加 for 循环: | for_statement)
+;
+
+while_statement:
+    WHILE LPAREN expression RPAREN statement
+    { $$ = create_while_statement($3, $5); }
+;
 /* --- 表达式 (来自 3.3 节) --- */
 expression:
     assignment_expression
