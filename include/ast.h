@@ -183,6 +183,7 @@ ASTNode* create_assignment_expr(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode* create_unary_expr(UnaryOpType op, ASTNode *argument, bool prefix); // 扩展了 API
 ASTNode* create_call_expression(ASTNode *callee, NodeList *arguments);
 ASTNode* create_member_access(ASTNode *object, ASTNode *property, bool computed);
+ASTNode* append_to_list(ASTNode *list_wrapper, ASTNode *node_to_append);
 
 // ASI 辅助函数
 bool can_insert_semicolon(Scanner *scanner);

@@ -174,6 +174,41 @@ void nodelist_append(NodeList* list, ASTNode* node) {
     list->nodes[list->size++] = node;
 }
 
+// 列表操作 (仍被 statement_list 和 variable_declaration_list 使用)
+ASTNode* append_to_list(ASTNode *list_wrapper, ASTNode *node_to_append) {
+    if (!list_wrapper || !node_to_append) return list_wrapper;
+
+    ASTNode *head = NULL;
+
+    // 根据包装器类型找到 head 指针
+    if (list_wrapper->type == NODE_SCRIPT || list_wrapper->type == NODE_BLOCK_STATEMENT) {
+        head = list_wrapper->data.script.head;
+    } else if (list_wrapper->type == NODE_VARIABLE_DECLARATION) {
+        head = list_wrapper->data.var_decl.head;
+    } else {
+        // 错误：试图向非列表类型追加
+        return list_wrapper;
+    }
+
+    if (head == NULL) {
+        // 列表为空，设置 head
+        if (list_wrapper->type == NODE_SCRIPT || list_wrapper->type == NODE_BLOCK_STATEMENT) {
+            list_wrapper->data.script.head = node_to_append;
+        } else if (list_wrapper->type == NODE_VARIABLE_DECLARATION) {
+            list_wrapper->data.var_decl.head = node_to_append;
+        }
+    } else {
+        // 列表不为空，找到尾部并追加
+        ASTNode *current = head;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = node_to_append;
+    }
+
+    node_to_append->next = NULL;
+    return list_wrapper;
+}
 
 // ASI 辅助函数 (来自 4.3 节)
 void nodelist_free(NodeList* list) {
