@@ -63,7 +63,8 @@ int yylex(void)
 %type <list> statement_list
 %type <node> statement
 %type <node> Script
-%type <node> block_statement variable_statement expression_statement if_statement iteration_statement while_statement 
+%type <node> block_statement variable_statement expression_statement if_statement iteration_statement while_statement for_statement
+%type <node> for_init
 %type <node> return_statement
 %type <node> function_declaration
 %type <list> variable_declaration_list_inner
@@ -143,7 +144,7 @@ statement:
     { $$ = $1; }
 | function_declaration
     { $$ = $1; }
-| iteration_statement
+| iteration_statement   
     { $$ = $1; }
 /* ... 此处应有其他语句类型:break, continue 等 ... */
 ;
@@ -239,12 +240,28 @@ function_declaration:
 iteration_statement:
     while_statement
     { $$ = $1; }
-    // (未来可以在这里添加 for 循环: | for_statement)
+|   for_statement
+    { $$ = $1; }
 ;
 
 while_statement:
     WHILE LPAREN expression RPAREN statement
     { $$ = create_while_statement($3, $5); }
+;
+
+for_statement:
+    FOR LPAREN for_init SEMICOLON expression_opt SEMICOLON expression_opt RPAREN statement
+    { $$ = create_for_statement($3, $5, $7, $9); }
+;
+
+// for_init 规则处理 for 循环的第一部分
+for_init:
+    /* empty */
+    { $$ = NULL; }
+|   variable_declaration_list // 例如: let i = 0, j = 1
+    { $$ = $1; }
+|   expression              // 例如: i = 0, j = 0
+    { $$ = $1; }
 ;
 /* --- 表达式 (来自 3.3 节) --- */
 expression:

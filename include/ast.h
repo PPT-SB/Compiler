@@ -15,6 +15,7 @@ typedef enum {
     NODE_THIS_EXPRESSION,
     NODE_IF_STATEMENT,
     NODE_WHILE_STATEMENT,
+    NODE_FOR_STATEMENT,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
     NODE_FUNCTION_DECLARATION,
@@ -116,6 +117,14 @@ typedef struct ASTNode {
             struct ASTNode *body;
         } while_stmt;
 
+        // NODE_FOR_STATEMENT
+        struct {
+            struct ASTNode *init;     // 可以是 VariableDeclaration, Expression, 或 NULL
+            struct ASTNode *test;     // 可以是 Expression 或 NULL
+            struct ASTNode *update;   // 可以是 Expression 或 NULL
+            struct ASTNode *body;
+        } for_stmt;
+
         // NODE_EXPRESSION_STATEMENT
         struct {
             struct ASTNode *expression;
@@ -183,6 +192,7 @@ ASTNode* create_this_node();
 ASTNode* create_script_node(NodeList *body);
 ASTNode* create_if_statement(ASTNode *test, ASTNode *consequent, ASTNode *alternate);
 ASTNode* create_while_statement(ASTNode *test, ASTNode *body);
+ASTNode* create_for_statement(ASTNode *init, ASTNode *test, ASTNode *update, ASTNode *body);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
 ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);

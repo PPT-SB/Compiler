@@ -92,6 +92,15 @@ ASTNode* create_while_statement(ASTNode *test, ASTNode *body) {
     return node;
 }
 
+ASTNode* create_for_statement(ASTNode *init, ASTNode *test, ASTNode *update, ASTNode *body) {
+    ASTNode *node = create_base_node(NODE_FOR_STATEMENT);
+    node->data.for_stmt.init = init;
+    node->data.for_stmt.test = test;
+    node->data.for_stmt.update = update;
+    node->data.for_stmt.body = body;
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -216,6 +225,12 @@ void free_ast(ASTNode *node) {
         case NODE_WHILE_STATEMENT:
             free_ast(node->data.while_stmt.test);
             free_ast(node->data.while_stmt.body);
+            break;
+        case NODE_FOR_STATEMENT:
+            free_ast(node->data.for_stmt.init);
+            free_ast(node->data.for_stmt.test);
+            free_ast(node->data.for_stmt.update);
+            free_ast(node->data.for_stmt.body);
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -376,6 +391,17 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.while_stmt.test, indent + 2);
             print_indent(indent + 1); printf("body:\n");
             print_ast(node->data.while_stmt.body, indent + 2);
+            break;
+        case NODE_FOR_STATEMENT:
+            printf("ForStatement\n");
+            print_indent(indent + 1); printf("init:\n");
+            print_ast(node->data.for_stmt.init, indent + 2);
+            print_indent(indent + 1); printf("test:\n");
+            print_ast(node->data.for_stmt.test, indent + 2);
+            print_indent(indent + 1); printf("update:\n");
+            print_ast(node->data.for_stmt.update, indent + 2);
+            print_indent(indent + 1); printf("body:\n");
+            print_ast(node->data.for_stmt.body, indent + 2);
             break;
         case NODE_EXPRESSION_STATEMENT:
             printf("ExpressionStatement\n");
