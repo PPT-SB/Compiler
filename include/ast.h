@@ -22,7 +22,6 @@ typedef enum {
     NODE_UNARY_EXPRESSION,
     NODE_CALL_EXPRESSION,
     NODE_MEMBER_EXPRESSION,
-    NODE_ARGUMENT_LIST,       // (参数列表的容器)
 } NodeType;
 
 // 变量声明类型
@@ -61,6 +60,12 @@ typedef enum {
     OP_NOT, OP_BIT_NOT,
     OP_UNARY_PLUS, OP_UNARY_MINUS
 } UnaryOpType;
+
+typedef struct {
+    struct ASTNode **nodes;  // 指向 ASTNode* 指针数组的指针
+    int size;         // 当前有多少个节点
+    int capacity;     // 已分配的容量
+} NodeList;
 
 // 抽象语法树 (AST) 节点
 typedef struct ASTNode {
@@ -117,7 +122,7 @@ typedef struct ASTNode {
         // NODE_FUNCTION_DECLARATION
         struct {
             struct ASTNode *id;     // Identifier (函数名)
-            struct ASTNode *params; // NODE_ARGUMENT_LIST (参数列表)
+            NodeList *params; // NODE_ARGUMENT_LIST (参数列表)
             struct ASTNode *body;   // NODE_BLOCK_STATEMENT (函数体)
         } func_decl;
 
@@ -145,7 +150,7 @@ typedef struct ASTNode {
         // NODE_CALL_EXPRESSION
         struct {
             struct ASTNode *callee;
-            struct ASTNode *arguments; // 指向 NODE_ARGUMENT_LIST
+            NodeList *arguments; // 指向 NODE_ARGUMENT_LIST
         } call_expr;
 
         // NODE_MEMBER_EXPRESSION
@@ -154,11 +159,6 @@ typedef struct ASTNode {
             struct ASTNode *property;
             bool computed; // true: a[b], false: a.b
         } member_expr;
-
-        // NODE_ARGUMENT_LIST
-        struct {
-            struct ASTNode *head; // 指向参数列表的第一个节点
-        } arg_list;
         
         // NODE_THIS_EXPRESSION (无特定字段)
     } data;
@@ -177,19 +177,18 @@ ASTNode* create_this_node();
 ASTNode* create_if_statement(ASTNode *test, ASTNode *consequent, ASTNode *alternate);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
-ASTNode* create_function_declaration(ASTNode *id, ASTNode *params, ASTNode *body);
+ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);
 ASTNode* create_binary_expr(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode* create_assignment_expr(BinaryOpType op, ASTNode *left, ASTNode *right);
 ASTNode* create_unary_expr(UnaryOpType op, ASTNode *argument, bool prefix); // 扩展了 API
-ASTNode* create_call_expression(ASTNode *callee, ASTNode *arguments);
+ASTNode* create_call_expression(ASTNode *callee, NodeList *arguments);
 ASTNode* create_member_access(ASTNode *object, ASTNode *property, bool computed);
-ASTNode* create_argument_list(ASTNode *argument, ASTNode *ignored);
-
-// 列表操作
-ASTNode* append_to_list(ASTNode *list_wrapper, ASTNode *node_to_append);
 
 // ASI 辅助函数
 bool can_insert_semicolon(Scanner *scanner);
+NodeList* nodelist_create(void);
+void nodelist_append(NodeList* list, ASTNode* node);
+void nodelist_free(NodeList* list); // 释放列表及其中的所有节点
 
 // 内存管理
 void free_ast(ASTNode *node);

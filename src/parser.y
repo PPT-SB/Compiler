@@ -34,6 +34,7 @@ int yylex(void)
 %union {
     char *str_val;
     struct ASTNode *node; // *** 更新：使用 ast.h 中的类型 ***
+    NodeList *list;
 }
 
 /* 终结符 (Tokens) */
@@ -69,8 +70,10 @@ int yylex(void)
 %type <node> relational_expression shift_expression additive_expression
 %type <node> multiplicative_expression unary_expression update_expression
 %type <node> left_hand_side_expression new_expression call_expression
-%type <node> member_expression primary_expression arguments argument_list
+%type <node> member_expression primary_expression
 %type <node> expression_opt
+%type <list> arguments
+%type <list> argument_list
 
 /* 优先级和结合性 (来自 3.2 节) */
 %left COMMA
@@ -388,16 +391,22 @@ member_expression:
 
 arguments:
     LPAREN RPAREN
-    { $$ = create_argument_list(NULL, NULL); } // 空参数列表
-| LPAREN argument_list RPAREN
-    { $$ = $2; }
+    { $$ = nodelist_create(); } // Return a new empty list
+|   LPAREN argument_list RPAREN
+    { $$ = $2; }               // Return the list from argument_list
 ;
 
 argument_list:
     assignment_expression
-    { $$ = create_argument_list($1, NULL); } 
-| argument_list COMMA assignment_expression
-    { $$ = append_to_list($1, $3); }
+    { 
+        $$ = nodelist_create(); // Create a new list
+        nodelist_append($$, $1);  // Add the first argument
+    } 
+|   argument_list COMMA assignment_expression
+    { 
+        nodelist_append($1, $3);  // Add the next argument to the existing list
+        $$ = $1;                  // Return the modified list
+    }
 ;
 
 primary_expression:

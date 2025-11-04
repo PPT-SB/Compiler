@@ -228,9 +228,10 @@ typedef union YYSTYPE
 {
     char *str_val;
     struct ASTNode *node; // *** 更新：使用 ast.h 中的类型 ***
+    NodeList *list;
 }
 /* Line 1529 of yacc.c.  */
-#line 234 "build/parser.tab.h"
+#line 235 "build/parser.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

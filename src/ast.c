@@ -2,6 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+//列表创建函数
+NodeList* nodelist_create(void) {
+    NodeList *list = (NodeList*)malloc(sizeof(NodeList));
+    if (!list) {
+        yyerror("Out of memory");
+        exit(1);
+    }
+    list->size = 0;
+    list->capacity = 4; // 初始容量为 4
+    list->nodes = (ASTNode**)malloc(list->capacity * sizeof(ASTNode*));
+    if (!list->nodes) {
+        yyerror("Out of memory");
+        exit(1);
+    }
+    return list;
+}
 // 内部辅助函数：创建一个基础节点
 static ASTNode* create_base_node(NodeType type) {
     extern Scanner* scanner; // 访问在 main.c 中定义的全局 scanner
@@ -96,7 +112,7 @@ ASTNode* create_return_statement(ASTNode *argument) {
     return node;
 }
 
-ASTNode* create_function_declaration(ASTNode *id, ASTNode *params, ASTNode *body) {
+ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body) {
     ASTNode *node = create_base_node(NODE_FUNCTION_DECLARATION);
     node->data.func_decl.id = id;
     node->data.func_decl.params = params;
@@ -129,7 +145,7 @@ ASTNode* create_unary_expr(UnaryOpType op, ASTNode *argument, bool prefix) {
     return node;
 }
 
-ASTNode* create_call_expression(ASTNode *callee, ASTNode *arguments) {
+ASTNode* create_call_expression(ASTNode *callee, NodeList *arguments) {
     ASTNode *node = create_base_node(NODE_CALL_EXPRESSION);
     node->data.call_expr.callee = callee;
     node->data.call_expr.arguments = arguments; // 这是一个 NODE_ARGUMENT_LIST
@@ -144,57 +160,34 @@ ASTNode* create_member_access(ASTNode *object, ASTNode *property, bool computed)
     return node;
 }
 
-ASTNode* create_argument_list(ASTNode *argument, ASTNode *ignored) {
-    ASTNode *list = create_base_node(NODE_ARGUMENT_LIST);
-    list->data.arg_list.head = argument;
-    if (argument) {
-        argument->next = NULL;
-    }
-    return list;
-}
-
 // 列表操作
-ASTNode* append_to_list(ASTNode *list_wrapper, ASTNode *node_to_append) {
-    if (!list_wrapper || !node_to_append) return list_wrapper;
-
-    ASTNode *head = NULL;
-    
-    // 根据包装器类型找到 head 指针
-    if (list_wrapper->type == NODE_SCRIPT || list_wrapper->type == NODE_BLOCK_STATEMENT) {
-        head = list_wrapper->data.script.head;
-    } else if (list_wrapper->type == NODE_VARIABLE_DECLARATION) {
-        head = list_wrapper->data.var_decl.head;
-    } else if (list_wrapper->type == NODE_ARGUMENT_LIST) {
-        head = list_wrapper->data.arg_list.head;
-    } else {
-        // 错误：试图向非列表类型追加
-        return list_wrapper;
-    }
-
-    if (head == NULL) {
-        // 列表为空，设置 head
-        if (list_wrapper->type == NODE_SCRIPT || list_wrapper->type == NODE_BLOCK_STATEMENT) {
-            list_wrapper->data.script.head = node_to_append;
-        } else if (list_wrapper->type == NODE_VARIABLE_DECLARATION) {
-            list_wrapper->data.var_decl.head = node_to_append;
-        } else if (list_wrapper->type == NODE_ARGUMENT_LIST) {
-            list_wrapper->data.arg_list.head = node_to_append;
+void nodelist_append(NodeList* list, ASTNode* node) {
+    if (list->size >= list->capacity) {
+        // 数组已满，容量加倍
+        list->capacity *= 2;
+        list->nodes = (ASTNode**)realloc(list->nodes, list->capacity * sizeof(ASTNode*));
+        if (!list->nodes) {
+            yyerror("Out of memory");
+            exit(1);
         }
-    } else {
-        // 列表不为空，找到尾部并追加
-        ASTNode *current = head;
-        while (current->next != NULL) {
-            current = current->next;
-        }
-        current->next = node_to_append;
     }
-    
-    node_to_append->next = NULL;
-    return list_wrapper;
+    list->nodes[list->size++] = node;
 }
 
 
 // ASI 辅助函数 (来自 4.3 节)
+void nodelist_free(NodeList* list) {
+    if (!list) return;
+    for (int i = 0; i < list->size; i++) {
+        // 递归释放列表中的每个节点
+        free_ast(list->nodes[i]);
+    }
+    // 释放指针数组本身
+    free(list->nodes);
+    // 释放列表结构体
+    free(list);
+}
+
 bool can_insert_semicolon(Scanner *scanner) {
     // 简化的实现：如果看到了换行符，就允许插入
     // 完整的实现还需要检查下一个 token 是否是 '}' 或 EOF
@@ -237,7 +230,7 @@ void free_ast(ASTNode *node) {
             break;
         case NODE_FUNCTION_DECLARATION:
             free_ast(node->data.func_decl.id);
-            free_ast(node->data.func_decl.params);
+            nodelist_free(node->data.func_decl.params);
             free_ast(node->data.func_decl.body);
         break;
         case NODE_BINARY_EXPRESSION:
@@ -253,14 +246,11 @@ void free_ast(ASTNode *node) {
             break;
         case NODE_CALL_EXPRESSION:
             free_ast(node->data.call_expr.callee);
-            free_ast(node->data.call_expr.arguments);
+            nodelist_free(node->data.call_expr.arguments);
             break;
         case NODE_MEMBER_EXPRESSION:
             free_ast(node->data.member_expr.object);
             free_ast(node->data.member_expr.property);
-            break;
-        case NODE_ARGUMENT_LIST:
-            free_ast(node->data.arg_list.head);
             break;
         case NODE_THIS_EXPRESSION:
             break;
@@ -278,6 +268,22 @@ void free_ast(ASTNode *node) {
 // --- 调试：打印 AST ---
 static void print_indent(int indent) {
     for (int i = 0; i < indent; i++) printf("  ");
+}
+
+static void nodelist_print(NodeList* list, int indent) {
+    if (!list || list->size == 0) {
+        print_indent(indent);
+        printf("[] (empty)\n"); // ESTree uses [] for arrays
+        return;
+    }
+
+    print_indent(indent);
+    printf("[\n");
+    for (int i = 0; i < list->size; i++) {
+        print_ast(list->nodes[i], indent + 1);
+    }
+    print_indent(indent);
+    printf("]\n");
 }
 
 static const char* literal_type_to_str(LiteralType type) {
@@ -383,7 +389,7 @@ void print_ast(ASTNode *node, int indent) {
             print_indent(indent + 1); printf("id:\n");
             print_ast(node->data.func_decl.id, indent + 2);
             print_indent(indent + 1); printf("params:\n");
-            print_ast(node->data.func_decl.params, indent + 2);
+            nodelist_print(node->data.func_decl.params, indent + 2);
             print_indent(indent + 1); printf("body:\n");
             print_ast(node->data.func_decl.body, indent + 2);
             break;
@@ -410,7 +416,7 @@ void print_ast(ASTNode *node, int indent) {
             print_indent(indent + 1); printf("callee:\n");
             print_ast(node->data.call_expr.callee, indent + 2);
             print_indent(indent + 1); printf("arguments:\n");
-            print_ast(node->data.call_expr.arguments, indent + 2);
+            nodelist_print(node->data.call_expr.arguments, indent + 2);
             break;
         case NODE_MEMBER_EXPRESSION:
             printf("MemberExpression (computed: %d)\n", node->data.member_expr.computed);
@@ -418,10 +424,6 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.member_expr.object, indent + 2);
             print_indent(indent + 1); printf("property:\n");
             print_ast(node->data.member_expr.property, indent + 2);
-            break;
-        case NODE_ARGUMENT_LIST:
-            printf("ArgumentList\n");
-            print_ast(node->data.arg_list.head, indent + 1);
             break;
         default:
             printf("UnknownNode (type: %d)\n", node->type);

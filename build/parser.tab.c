@@ -304,9 +304,10 @@ typedef union YYSTYPE
 {
     char *str_val;
     struct ASTNode *node; // *** 更新：使用 ast.h 中的类型 ***
+    NodeList *list;
 }
 /* Line 193 of yacc.c.  */
-#line 310 "build/parser.tab.c"
+#line 311 "build/parser.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -319,7 +320,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 323 "build/parser.tab.c"
+#line 324 "build/parser.tab.c"
 
 #ifdef short
 # undef short
@@ -648,17 +649,17 @@ static const yytype_int16 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   101,   101,   107,   108,   113,   115,   120,   122,   124,
-     126,   128,   130,   136,   142,   144,   155,   160,   162,   164,
-     166,   171,   173,   178,   180,   185,   192,   193,   198,   198,
-     206,   212,   214,   219,   221,   227,   233,   235,   240,   242,
-     247,   249,   254,   256,   261,   263,   268,   270,   272,   274,
-     276,   281,   283,   285,   287,   289,   291,   293,   298,   300,
-     302,   304,   309,   311,   313,   318,   320,   322,   324,   329,
-     331,   333,   335,   337,   339,   341,   343,   345,   347,   353,
-     355,   357,   362,   364,   369,   375,   381,   383,   385,   390,
-     392,   397,   399,   404,   406,   408,   410,   412,   414,   416,
-     418
+       0,   104,   104,   110,   111,   116,   118,   123,   125,   127,
+     129,   131,   133,   139,   145,   147,   158,   163,   165,   167,
+     169,   174,   176,   181,   183,   188,   195,   196,   201,   201,
+     209,   215,   217,   222,   224,   230,   236,   238,   243,   245,
+     250,   252,   257,   259,   264,   266,   271,   273,   275,   277,
+     279,   284,   286,   288,   290,   292,   294,   296,   301,   303,
+     305,   307,   312,   314,   316,   321,   323,   325,   327,   332,
+     334,   336,   338,   340,   342,   344,   346,   348,   350,   356,
+     358,   360,   365,   367,   372,   378,   384,   386,   388,   393,
+     395,   400,   405,   413,   415,   417,   419,   421,   423,   425,
+     427
 };
 #endif
 
@@ -1712,67 +1713,67 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 102 "src/parser.y"
+#line 105 "src/parser.y"
     { ast_root = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 3:
-#line 107 "src/parser.y"
+#line 110 "src/parser.y"
     { (yyval.node) = NULL; ;}
     break;
 
   case 4:
-#line 109 "src/parser.y"
+#line 112 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 5:
-#line 114 "src/parser.y"
+#line 117 "src/parser.y"
     { (yyval.node) = create_statement_list((yyvsp[(1) - (1)].node), NULL); ;}
     break;
 
   case 6:
-#line 116 "src/parser.y"
+#line 119 "src/parser.y"
     { (yyval.node) = append_to_list((yyvsp[(1) - (2)].node), (yyvsp[(2) - (2)].node)); ;}
     break;
 
   case 7:
-#line 121 "src/parser.y"
+#line 124 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 8:
-#line 123 "src/parser.y"
+#line 126 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 9:
-#line 125 "src/parser.y"
+#line 128 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 10:
-#line 127 "src/parser.y"
+#line 130 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 11:
-#line 129 "src/parser.y"
+#line 132 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 12:
-#line 131 "src/parser.y"
+#line 134 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 13:
-#line 137 "src/parser.y"
+#line 140 "src/parser.y"
     { (yyval.node) = create_block_statement((yyvsp[(2) - (3)].node)); ;}
     break;
 
   case 15:
-#line 144 "src/parser.y"
+#line 147 "src/parser.y"
     {
         extern Scanner *scanner; // <-- 添加这一行
         
@@ -1784,72 +1785,72 @@ yyreduce:
     break;
 
   case 16:
-#line 156 "src/parser.y"
+#line 159 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (2)].node); ;}
     break;
 
   case 17:
-#line 161 "src/parser.y"
+#line 164 "src/parser.y"
     { (yyval.node) = create_declaration_list(DECL_LET, (yyvsp[(2) - (2)].node), NULL); ;}
     break;
 
   case 18:
-#line 163 "src/parser.y"
+#line 166 "src/parser.y"
     { (yyval.node) = create_declaration_list(DECL_CONST, (yyvsp[(2) - (2)].node), NULL); ;}
     break;
 
   case 19:
-#line 165 "src/parser.y"
+#line 168 "src/parser.y"
     { (yyval.node) = create_declaration_list(DECL_VAR, (yyvsp[(2) - (2)].node), NULL); ;}
     break;
 
   case 20:
-#line 167 "src/parser.y"
+#line 170 "src/parser.y"
     { (yyval.node) = append_to_list((yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 21:
-#line 172 "src/parser.y"
+#line 175 "src/parser.y"
     { (yyval.node) = create_variable_declarator(create_identifier_node((yyvsp[(1) - (1)].str_val)), NULL); ;}
     break;
 
   case 22:
-#line 174 "src/parser.y"
+#line 177 "src/parser.y"
     { (yyval.node) = create_variable_declarator(create_identifier_node((yyvsp[(1) - (3)].str_val)), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 23:
-#line 179 "src/parser.y"
+#line 182 "src/parser.y"
     { (yyval.node) = create_if_statement((yyvsp[(3) - (5)].node), (yyvsp[(5) - (5)].node), NULL); ;}
     break;
 
   case 24:
-#line 181 "src/parser.y"
+#line 184 "src/parser.y"
     { (yyval.node) = create_if_statement((yyvsp[(3) - (7)].node), (yyvsp[(5) - (7)].node), (yyvsp[(7) - (7)].node)); ;}
     break;
 
   case 25:
-#line 186 "src/parser.y"
+#line 189 "src/parser.y"
     { (yyval.node) = create_expression_statement((yyvsp[(1) - (2)].node)); ;}
     break;
 
   case 26:
-#line 192 "src/parser.y"
+#line 195 "src/parser.y"
     { (yyval.node) = NULL; ;}
     break;
 
   case 27:
-#line 194 "src/parser.y"
+#line 197 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 28:
-#line 198 "src/parser.y"
+#line 201 "src/parser.y"
     { scanner->restrict_new_line = true; ;}
     break;
 
   case 29:
-#line 199 "src/parser.y"
+#line 202 "src/parser.y"
     { 
         scanner->restrict_new_line = false; // 退出受限模式
         (yyval.node) = create_return_statement((yyvsp[(3) - (4)].node));
@@ -1857,363 +1858,369 @@ yyreduce:
     break;
 
   case 30:
-#line 207 "src/parser.y"
-    { (yyval.node) = create_function_declaration(create_identifier_node((yyvsp[(2) - (4)].str_val)), (yyvsp[(3) - (4)].node), (yyvsp[(4) - (4)].node)); ;}
+#line 210 "src/parser.y"
+    { (yyval.node) = create_function_declaration(create_identifier_node((yyvsp[(2) - (4)].str_val)), (yyvsp[(3) - (4)].list), (yyvsp[(4) - (4)].node)); ;}
     break;
 
   case 31:
-#line 213 "src/parser.y"
+#line 216 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 32:
-#line 215 "src/parser.y"
+#line 218 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_COMMA, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 33:
-#line 220 "src/parser.y"
+#line 223 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 34:
-#line 222 "src/parser.y"
+#line 225 "src/parser.y"
     { (yyval.node) = create_assignment_expr(OP_ASSIGN, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 35:
-#line 228 "src/parser.y"
+#line 231 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 36:
-#line 234 "src/parser.y"
+#line 237 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 37:
-#line 236 "src/parser.y"
+#line 239 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_LOGICAL_OR, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 38:
-#line 241 "src/parser.y"
+#line 244 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 39:
-#line 243 "src/parser.y"
+#line 246 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_LOGICAL_AND, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 40:
-#line 248 "src/parser.y"
+#line 251 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 41:
-#line 250 "src/parser.y"
+#line 253 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_BIT_OR, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 42:
-#line 255 "src/parser.y"
+#line 258 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 43:
-#line 257 "src/parser.y"
+#line 260 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_BIT_XOR, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 44:
-#line 262 "src/parser.y"
+#line 265 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 45:
-#line 264 "src/parser.y"
+#line 267 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_BIT_AND, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 46:
-#line 269 "src/parser.y"
+#line 272 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 47:
-#line 271 "src/parser.y"
+#line 274 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_EQ, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 48:
-#line 273 "src/parser.y"
+#line 276 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_NE, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 49:
-#line 275 "src/parser.y"
+#line 278 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_STRICT_EQ, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 50:
-#line 277 "src/parser.y"
+#line 280 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_STRICT_NE, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 51:
-#line 282 "src/parser.y"
+#line 285 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 52:
-#line 284 "src/parser.y"
+#line 287 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_LT, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 53:
-#line 286 "src/parser.y"
+#line 289 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_GT, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 54:
-#line 288 "src/parser.y"
+#line 291 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_LE, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 55:
-#line 290 "src/parser.y"
+#line 293 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_GE, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 56:
-#line 292 "src/parser.y"
+#line 295 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_IN, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 57:
-#line 294 "src/parser.y"
+#line 297 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_INSTANCEOF, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 58:
-#line 299 "src/parser.y"
+#line 302 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 59:
-#line 301 "src/parser.y"
+#line 304 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_LSHIFT, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 60:
-#line 303 "src/parser.y"
+#line 306 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_RSHIFT, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 61:
-#line 305 "src/parser.y"
+#line 308 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_URSHIFT, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 62:
-#line 310 "src/parser.y"
+#line 313 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 63:
-#line 312 "src/parser.y"
+#line 315 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_PLUS, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 64:
-#line 314 "src/parser.y"
+#line 317 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_MINUS, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 65:
-#line 319 "src/parser.y"
+#line 322 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 66:
-#line 321 "src/parser.y"
+#line 324 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_MUL, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 67:
-#line 323 "src/parser.y"
+#line 326 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_MOD, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 68:
-#line 325 "src/parser.y"
+#line 328 "src/parser.y"
     { (yyval.node) = create_binary_expr(OP_POWER, (yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
     break;
 
   case 69:
-#line 330 "src/parser.y"
+#line 333 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 70:
-#line 332 "src/parser.y"
+#line 335 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_DELETE, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 71:
-#line 334 "src/parser.y"
+#line 337 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_VOID, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 72:
-#line 336 "src/parser.y"
+#line 339 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_TYPEOF, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 73:
-#line 338 "src/parser.y"
+#line 341 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_INC, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 74:
-#line 340 "src/parser.y"
+#line 343 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_DEC, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 75:
-#line 342 "src/parser.y"
+#line 345 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_UNARY_PLUS, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 76:
-#line 344 "src/parser.y"
+#line 347 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_UNARY_MINUS, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 77:
-#line 346 "src/parser.y"
+#line 349 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_BIT_NOT, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 78:
-#line 348 "src/parser.y"
+#line 351 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_NOT, (yyvsp[(2) - (2)].node), true); ;}
     break;
 
   case 79:
-#line 354 "src/parser.y"
+#line 357 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 80:
-#line 356 "src/parser.y"
+#line 359 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_POST_INC, (yyvsp[(1) - (2)].node), false); ;}
     break;
 
   case 81:
-#line 358 "src/parser.y"
+#line 361 "src/parser.y"
     { (yyval.node) = create_unary_expr(OP_POST_DEC, (yyvsp[(1) - (2)].node), false); ;}
     break;
 
   case 82:
-#line 363 "src/parser.y"
+#line 366 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 83:
-#line 365 "src/parser.y"
+#line 368 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 84:
-#line 370 "src/parser.y"
+#line 373 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 85:
-#line 376 "src/parser.y"
-    { (yyval.node) = create_call_expression((yyvsp[(1) - (2)].node), (yyvsp[(2) - (2)].node)); ;}
+#line 379 "src/parser.y"
+    { (yyval.node) = create_call_expression((yyvsp[(1) - (2)].node), (yyvsp[(2) - (2)].list)); ;}
     break;
 
   case 86:
-#line 382 "src/parser.y"
+#line 385 "src/parser.y"
     { (yyval.node) = (yyvsp[(1) - (1)].node); ;}
     break;
 
   case 87:
-#line 384 "src/parser.y"
+#line 387 "src/parser.y"
     { (yyval.node) = create_member_access((yyvsp[(1) - (4)].node), (yyvsp[(3) - (4)].node), true); ;}
     break;
 
   case 88:
-#line 386 "src/parser.y"
+#line 389 "src/parser.y"
     { (yyval.node) = create_member_access((yyvsp[(1) - (3)].node), create_identifier_node((yyvsp[(3) - (3)].str_val)), false); ;}
     break;
 
   case 89:
-#line 391 "src/parser.y"
-    { (yyval.node) = create_argument_list(NULL, NULL); ;}
+#line 394 "src/parser.y"
+    { (yyval.list) = nodelist_create(); ;}
     break;
 
   case 90:
-#line 393 "src/parser.y"
-    { (yyval.node) = (yyvsp[(2) - (3)].node); ;}
+#line 396 "src/parser.y"
+    { (yyval.list) = (yyvsp[(2) - (3)].list); ;}
     break;
 
   case 91:
-#line 398 "src/parser.y"
-    { (yyval.node) = create_argument_list((yyvsp[(1) - (1)].node), NULL); ;}
+#line 401 "src/parser.y"
+    { 
+        (yyval.list) = nodelist_create(); // Create a new list
+        nodelist_append((yyval.list), (yyvsp[(1) - (1)].node));  // Add the first argument
+    ;}
     break;
 
   case 92:
-#line 400 "src/parser.y"
-    { (yyval.node) = append_to_list((yyvsp[(1) - (3)].node), (yyvsp[(3) - (3)].node)); ;}
+#line 406 "src/parser.y"
+    { 
+        nodelist_append((yyvsp[(1) - (3)].list), (yyvsp[(3) - (3)].node));  // Add the next argument to the existing list
+        (yyval.list) = (yyvsp[(1) - (3)].list);                  // Return the modified list
+    ;}
     break;
 
   case 93:
-#line 405 "src/parser.y"
+#line 414 "src/parser.y"
     { (yyval.node) = create_this_node(); ;}
     break;
 
   case 94:
-#line 407 "src/parser.y"
+#line 416 "src/parser.y"
     { (yyval.node) = create_identifier_node((yyvsp[(1) - (1)].str_val)); ;}
     break;
 
   case 95:
-#line 409 "src/parser.y"
+#line 418 "src/parser.y"
     { (yyval.node) = create_literal_node(LITERAL_NUMBER, (yyvsp[(1) - (1)].str_val)); ;}
     break;
 
   case 96:
-#line 411 "src/parser.y"
+#line 420 "src/parser.y"
     { (yyval.node) = create_literal_node(LITERAL_STRING, (yyvsp[(1) - (1)].str_val)); ;}
     break;
 
   case 97:
-#line 413 "src/parser.y"
+#line 422 "src/parser.y"
     { (yyval.node) = create_literal_node(LITERAL_TRUE, strdup("true")); ;}
     break;
 
   case 98:
-#line 415 "src/parser.y"
+#line 424 "src/parser.y"
     { (yyval.node) = create_literal_node(LITERAL_FALSE, strdup("false")); ;}
     break;
 
   case 99:
-#line 417 "src/parser.y"
+#line 426 "src/parser.y"
     { (yyval.node) = create_literal_node(LITERAL_NULL, strdup("null")); ;}
     break;
 
   case 100:
-#line 419 "src/parser.y"
+#line 428 "src/parser.y"
     { (yyval.node) = (yyvsp[(2) - (3)].node); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 2217 "build/parser.tab.c"
+#line 2224 "build/parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2427,7 +2434,7 @@ yyreturn:
 }
 
 
-#line 422 "src/parser.y"
+#line 431 "src/parser.y"
 
 /* 附加 C 代码区 */
 /* (main 和 yyerror 已移至 main.c) */
