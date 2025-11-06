@@ -337,7 +337,8 @@ assignment_expression:
 conditional_expression:
     logical_or_expression
     { $$ = $1; }
-/* ... TODO: 条件表达式 (?:) ... */
+|   logical_or_expression CONDITIONAL assignment_expression COLON assignment_expression
+    { $$ = create_conditional_expression($1, $3, $5); }
 ;
 
 logical_or_expression:

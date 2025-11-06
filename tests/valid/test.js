@@ -14,7 +14,8 @@ function myTest() {
     // a 在这里应该是 20
 
     ++a; // a 变为 21
-
+    let b = this.a;      // 测试: object.property (computed: false)
+    let c = this[a];     // 测试: object[expression] (computed: true)
     // <-- 新添加的 switch 语句 -->
     switch (a) {
         case 10:
@@ -28,7 +29,7 @@ function myTest() {
     }
     // <-- a 在这里应该是 50 -->
 
-    return a;
+    return a > 40 ? 1 : 0;
 }
 
 myTest();

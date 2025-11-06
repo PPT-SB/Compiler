@@ -125,6 +125,14 @@ ASTNode* create_switch_case(ASTNode* test, NodeList* statements) {
     return node;
 }
 
+ASTNode* create_conditional_expression(ASTNode *test, ASTNode *consequent, ASTNode *alternate) {
+    ASTNode *node = create_base_node(NODE_CONDITIONAL_EXPRESSION);
+    node->data.conditional_expr.test = test;
+    node->data.conditional_expr.consequent = consequent;
+    node->data.conditional_expr.alternate = alternate;
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -267,6 +275,11 @@ void free_ast(ASTNode *node) {
         case NODE_SWITCH_CASE:
             free_ast(node->data.switch_case.test); // test 可能为 NULL, free_ast 会处理
             nodelist_free(node->data.switch_case.consequent);
+            break;
+        case NODE_CONDITIONAL_EXPRESSION:
+            free_ast(node->data.conditional_expr.test);
+            free_ast(node->data.conditional_expr.consequent);
+            free_ast(node->data.conditional_expr.alternate);
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -447,6 +460,15 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.switch_case.test, indent + 2); // test 为 NULL 时会打印 (null)
             print_indent(indent + 1); printf("consequent:\n");
             nodelist_print(node->data.switch_case.consequent, indent + 1);
+            break;
+        case NODE_CONDITIONAL_EXPRESSION:
+            printf("ConditionalExpression\n");
+            print_indent(indent + 1); printf("test:\n");
+            print_ast(node->data.conditional_expr.test, indent + 2);
+            print_indent(indent + 1); printf("consequent:\n");
+            print_ast(node->data.conditional_expr.consequent, indent + 2);
+            print_indent(indent + 1); printf("alternate:\n");
+            print_ast(node->data.conditional_expr.alternate, indent + 2);
             break;
         case NODE_WHILE_STATEMENT:
             printf("WhileStatement\n");
