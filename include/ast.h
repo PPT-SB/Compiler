@@ -16,6 +16,8 @@ typedef enum {
     NODE_IF_STATEMENT,
     NODE_WHILE_STATEMENT,
     NODE_FOR_STATEMENT,
+    NODE_BREAK_STATEMENT,
+    NODE_CONTINUE_STATEMENT,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
     NODE_FUNCTION_DECLARATION,
@@ -125,6 +127,12 @@ typedef struct ASTNode {
             struct ASTNode *body;
         } for_stmt;
 
+        // NODE_BREAK_STATEMENT (无子节点)
+        struct {} break_stmt;
+
+        // NODE_CONTINUE_STATEMENT (无子节点)
+        struct {} continue_stmt;
+
         // NODE_EXPRESSION_STATEMENT
         struct {
             struct ASTNode *expression;
@@ -193,6 +201,8 @@ ASTNode* create_script_node(NodeList *body);
 ASTNode* create_if_statement(ASTNode *test, ASTNode *consequent, ASTNode *alternate);
 ASTNode* create_while_statement(ASTNode *test, ASTNode *body);
 ASTNode* create_for_statement(ASTNode *init, ASTNode *test, ASTNode *update, ASTNode *body);
+ASTNode* create_break_statement(void);
+ASTNode* create_continue_statement(void);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
 ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);

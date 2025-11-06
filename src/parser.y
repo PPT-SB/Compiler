@@ -78,6 +78,8 @@ int yylex(void)
 %type <node> left_hand_side_expression new_expression call_expression
 %type <node> member_expression primary_expression
 %type <node> expression_opt
+%type <node> break_statement
+%type <node> continue_statement
 %type <list> arguments
 %type <list> argument_list
 
@@ -146,7 +148,10 @@ statement:
     { $$ = $1; }
 | iteration_statement   
     { $$ = $1; }
-/* ... 此处应有其他语句类型:break, continue 等 ... */
+| break_statement
+    { $$ = $1; }
+| continue_statement
+    { $$ = $1; }
 ;
 
 block_statement:
@@ -263,6 +268,17 @@ for_init:
 |   expression              // 例如: i = 0, j = 0
     { $$ = $1; }
 ;
+
+break_statement:
+    BREAK optional_semicolon
+    { $$ = create_break_statement(); }
+;
+
+continue_statement:
+    CONTINUE optional_semicolon
+    { $$ = create_continue_statement(); }
+;
+
 /* --- 表达式 (来自 3.3 节) --- */
 expression:
     assignment_expression

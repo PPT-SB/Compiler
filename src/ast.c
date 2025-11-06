@@ -101,6 +101,16 @@ ASTNode* create_for_statement(ASTNode *init, ASTNode *test, ASTNode *update, AST
     return node;
 }
 
+ASTNode* create_break_statement(void) {
+    ASTNode *node = create_base_node(NODE_BREAK_STATEMENT);
+    return node;
+}
+
+ASTNode* create_continue_statement(void) {
+    ASTNode *node = create_base_node(NODE_CONTINUE_STATEMENT);
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -231,6 +241,10 @@ void free_ast(ASTNode *node) {
             free_ast(node->data.for_stmt.test);
             free_ast(node->data.for_stmt.update);
             free_ast(node->data.for_stmt.body);
+            break;
+        case NODE_BREAK_STATEMENT:
+            break;
+        case NODE_CONTINUE_STATEMENT:
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -384,6 +398,12 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.if_stmt.consequent, indent + 2);
             print_indent(indent + 1); printf("alternate:\n");
             print_ast(node->data.if_stmt.alternate, indent + 2);
+            break;
+        case NODE_BREAK_STATEMENT:
+            printf("BreakStatement\n");
+            break;
+        case NODE_CONTINUE_STATEMENT:
+            printf("ContinueStatement\n");
             break;
         case NODE_WHILE_STATEMENT:
             printf("WhileStatement\n");
