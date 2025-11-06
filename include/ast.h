@@ -18,6 +18,8 @@ typedef enum {
     NODE_FOR_STATEMENT,
     NODE_BREAK_STATEMENT,
     NODE_CONTINUE_STATEMENT,
+    NODE_SWITCH_STATEMENT,
+    NODE_SWITCH_CASE,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
     NODE_FUNCTION_DECLARATION,
@@ -132,6 +134,17 @@ typedef struct ASTNode {
 
         // NODE_CONTINUE_STATEMENT (无子节点)
         struct {} continue_stmt;
+        // NODE_SWITCH_STATEMENT
+        struct {
+            struct ASTNode *discriminant; // switch (discriminant)
+            NodeList *cases;              // case 列表
+        } switch_stmt;
+
+        // NODE_SWITCH_CASE
+        struct {
+            struct ASTNode *test; // case test: (如果 test 为 NULL, 则为 default)
+            NodeList *consequent; // case 里的语句列表
+        } switch_case; 
 
         // NODE_EXPRESSION_STATEMENT
         struct {
@@ -203,6 +216,8 @@ ASTNode* create_while_statement(ASTNode *test, ASTNode *body);
 ASTNode* create_for_statement(ASTNode *init, ASTNode *test, ASTNode *update, ASTNode *body);
 ASTNode* create_break_statement(void);
 ASTNode* create_continue_statement(void);
+ASTNode* create_switch_statement(ASTNode* discriminant, NodeList* cases);
+ASTNode* create_switch_case(ASTNode* test, NodeList* statements);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
 ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);

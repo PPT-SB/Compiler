@@ -80,6 +80,10 @@ int yylex(void)
 %type <node> expression_opt
 %type <node> break_statement
 %type <node> continue_statement
+%type <node> switch_statement
+%type <list> switch_case_list
+%type <node> switch_case
+%type <list> case_statement_list
 %type <list> arguments
 %type <list> argument_list
 
@@ -151,6 +155,8 @@ statement:
 | break_statement
     { $$ = $1; }
 | continue_statement
+    { $$ = $1; }
+| switch_statement
     { $$ = $1; }
 ;
 
@@ -279,6 +285,39 @@ continue_statement:
     { $$ = create_continue_statement(); }
 ;
 
+switch_statement:
+    SWITCH LPAREN expression RPAREN LBRACE switch_case_list RBRACE
+    { $$ = create_switch_statement($3, $6); }
+;
+
+// switch_case_list 负责构建 SwitchCase 节点的 NodeList
+switch_case_list:
+    /* empty */
+    { $$ = nodelist_create(); }
+|   switch_case_list switch_case
+    { 
+        nodelist_append($1, $2);
+        $$ = $1;
+    }
+;
+
+// switch_case 匹配 'case ...:' 或 'default:'
+switch_case:
+    CASE expression COLON case_statement_list
+    { $$ = create_switch_case($2, $4); }
+|   DEFAULT COLON case_statement_list
+    { $$ = create_switch_case(NULL, $3); }
+;
+
+case_statement_list:
+    /* empty */
+    { $$ = nodelist_create(); }
+|   case_statement_list statement
+    {
+        nodelist_append($1, $2);
+        $$ = $1;
+    }
+;
 /* --- 表达式 (来自 3.3 节) --- */
 expression:
     assignment_expression

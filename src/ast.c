@@ -111,6 +111,20 @@ ASTNode* create_continue_statement(void) {
     return node;
 }
 
+ASTNode* create_switch_statement(ASTNode* discriminant, NodeList* cases) {
+    ASTNode *node = create_base_node(NODE_SWITCH_STATEMENT);
+    node->data.switch_stmt.discriminant = discriminant;
+    node->data.switch_stmt.cases = cases;
+    return node;
+}
+
+ASTNode* create_switch_case(ASTNode* test, NodeList* statements) {
+    ASTNode *node = create_base_node(NODE_SWITCH_CASE);
+    node->data.switch_case.test = test;
+    node->data.switch_case.consequent = statements;
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -245,6 +259,14 @@ void free_ast(ASTNode *node) {
         case NODE_BREAK_STATEMENT:
             break;
         case NODE_CONTINUE_STATEMENT:
+            break;
+            case NODE_SWITCH_STATEMENT:
+            free_ast(node->data.switch_stmt.discriminant);
+            nodelist_free(node->data.switch_stmt.cases);
+            break;
+        case NODE_SWITCH_CASE:
+            free_ast(node->data.switch_case.test); // test 可能为 NULL, free_ast 会处理
+            nodelist_free(node->data.switch_case.consequent);
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -411,6 +433,20 @@ void print_ast(ASTNode *node, int indent) {
             break;
         case NODE_CONTINUE_STATEMENT:
             printf("ContinueStatement\n");
+            break;
+        case NODE_SWITCH_STATEMENT:
+            printf("SwitchStatement\n");
+            print_indent(indent + 1); printf("discriminant:\n");
+            print_ast(node->data.switch_stmt.discriminant, indent + 2);
+            print_indent(indent + 1); printf("cases:\n");
+            nodelist_print(node->data.switch_stmt.cases, indent + 1);
+            break;
+        case NODE_SWITCH_CASE:
+            printf("SwitchCase\n");
+            print_indent(indent + 1); printf("test:\n");
+            print_ast(node->data.switch_case.test, indent + 2); // test 为 NULL 时会打印 (null)
+            print_indent(indent + 1); printf("consequent:\n");
+            nodelist_print(node->data.switch_case.consequent, indent + 1);
             break;
         case NODE_WHILE_STATEMENT:
             printf("WhileStatement\n");
