@@ -342,10 +342,17 @@ static const char* bin_op_to_str(BinaryOpType op) {
 
 static const char* un_op_to_str(UnaryOpType op) {
     switch (op) {
-        case OP_NOT: return "!";
         case OP_DELETE: return "delete";
+        case OP_VOID: return "void";
         case OP_TYPEOF: return "typeof";
-        // ...
+        case OP_INC: return "++";
+        case OP_DEC: return "--";
+        case OP_POST_INC: return "++"; // 打印是一样的
+        case OP_POST_DEC: return "--"; // 打印是一样的
+        case OP_NOT: return "!";
+        case OP_BIT_NOT: return "~";
+        case OP_UNARY_PLUS: return "+";
+        case OP_UNARY_MINUS: return "-";
         default: return "?_UOP_?";
     }
 }
@@ -456,9 +463,23 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.assignment_expr.right, indent + 2);
             break;
         case NODE_UNARY_EXPRESSION:
-            printf("UnaryExpression (op: %s, prefix: %d)\n", un_op_to_str(node->data.unary_expr.op), node->data.unary_expr.prefix);
-            print_ast(node->data.unary_expr.argument, indent + 1);
+        {
+            // 需要花括号来在 case 内部声明变量
+            UnaryOpType op = node->data.unary_expr.op;
+
+            // ESTree 将 ++ 和 -- 称为 "UpdateExpression"
+            if (op == OP_INC || op == OP_DEC || op == OP_POST_INC || op == OP_POST_DEC) {
+                printf("UpdateExpression (op: %s, prefix: %s)\n", 
+                    un_op_to_str(op), 
+                    node->data.unary_expr.prefix ? "true" : "false");
+            } else {
+                // 其他所有一元操作符都是前缀
+                printf("UnaryExpression (op: %s, prefix: true)\n", un_op_to_str(op));
+            }
+            print_indent(indent + 1); printf("argument:\n");
+            print_ast(node->data.unary_expr.argument, indent + 2);
             break;
+        }
         case NODE_CALL_EXPRESSION:
             printf("CallExpression\n");
             print_indent(indent + 1); printf("callee:\n");

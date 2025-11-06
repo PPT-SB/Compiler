@@ -7,13 +7,14 @@ function myTest() {
     }
  
  // a 在这里是 21
- for (let i = 0; i < 3; i = i + 1) {
+ for (let i = 0; i < 3; i++) {
     if (i == 1) {
-        continue; // 跳过 i=1 的情况
+        break; // 跳过 i=1 的情况
     }
     a = a - 1;
 }
- // a 现在应该是 18
+    ++a;
+ // a 现在应该是 20
     return a;
 }
 
