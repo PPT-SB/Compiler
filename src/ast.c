@@ -155,6 +155,12 @@ ASTNode* create_catch_clause(ASTNode *param, ASTNode *body) {
     return node;
 }
 
+ASTNode* create_throw_statement(ASTNode *argument) {
+    ASTNode *node = create_base_node(NODE_THROW_STATEMENT);
+    node->data.throw_stmt.argument = argument;
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -315,6 +321,9 @@ void free_ast(ASTNode *node) {
         case NODE_CATCH_CLAUSE:
             free_ast(node->data.catch_clause.param);
             free_ast(node->data.catch_clause.body);
+            break;
+        case NODE_THROW_STATEMENT:
+            free_ast(node->data.throw_stmt.argument);
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -533,6 +542,11 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.catch_clause.param, indent + 2);
             print_indent(indent + 1); printf("body:\n");
             print_ast(node->data.catch_clause.body, indent + 2);
+            break;
+        case NODE_THROW_STATEMENT:
+            printf("ThrowStatement\n");
+            print_indent(indent + 1); printf("argument:\n");
+            print_ast(node->data.throw_stmt.argument, indent + 2);
             break;
         case NODE_WHILE_STATEMENT:
             printf("WhileStatement\n");

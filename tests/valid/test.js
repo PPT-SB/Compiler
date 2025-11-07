@@ -31,7 +31,7 @@ function myTest() {
     try {
         a = a + 1; // a 变为 51
     } catch (err) {
-        a = 0;
+        throw err;
     } finally {
         a = a + 10; // a 变为 61
     }

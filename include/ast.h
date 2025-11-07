@@ -24,6 +24,7 @@ typedef enum {
     NODE_NEW_EXPRESSION,
     NODE_TRY_STATEMENT,
     NODE_CATCH_CLAUSE,
+    NODE_THROW_STATEMENT,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
     NODE_FUNCTION_DECLARATION,
@@ -176,6 +177,11 @@ typedef struct ASTNode {
             struct ASTNode *body;  // 'catch' 块 (BlockStatement)
         } catch_clause;
 
+        // NODE_THROW_STATEMENT
+        struct {
+            struct ASTNode *argument; // throw argument
+        } throw_stmt;
+
         // NODE_EXPRESSION_STATEMENT
         struct {
             struct ASTNode *expression;
@@ -252,6 +258,7 @@ ASTNode* create_conditional_expression(ASTNode *test, ASTNode *consequent, ASTNo
 ASTNode* create_new_expression(ASTNode *callee, NodeList *arguments);
 ASTNode* create_try_statement(ASTNode *block, ASTNode *handler, ASTNode *finalizer);
 ASTNode* create_catch_clause(ASTNode *param, ASTNode *body);
+ASTNode* create_throw_statement(ASTNode *argument);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
 ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);

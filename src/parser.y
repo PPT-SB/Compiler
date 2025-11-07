@@ -83,6 +83,7 @@ int yylex(void)
 %type <node> try_statement
 %type <node> catch_clause
 %type <node> finally_clause
+%type <node> throw_statement
 %type <node> switch_statement
 %type <list> switch_case_list
 %type <node> switch_case
@@ -162,6 +163,8 @@ statement:
 | switch_statement
     { $$ = $1; }
 | try_statement
+    { $$ = $1; }
+| throw_statement
     { $$ = $1; }
 ;
 
@@ -318,6 +321,15 @@ finally_clause:
     FINALLY block_statement
     { $$ = $2; } // finally 子句只是一个 BlockStatement
 ;
+
+throw_statement:
+    THROW { scanner->restrict_new_line = true; } expression optional_semicolon
+    {
+        scanner->restrict_new_line = false; // 退出受限模式
+        $$ = create_throw_statement($3);
+    }
+;
+
 // switch_case_list 负责构建 SwitchCase 节点的 NodeList
 switch_case_list:
     /* empty */
