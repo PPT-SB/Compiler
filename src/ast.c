@@ -133,6 +133,13 @@ ASTNode* create_conditional_expression(ASTNode *test, ASTNode *consequent, ASTNo
     return node;
 }
 
+ASTNode* create_new_expression(ASTNode *callee, NodeList *arguments) {
+    ASTNode *node = create_base_node(NODE_NEW_EXPRESSION);
+    node->data.new_expr.callee = callee;
+    node->data.new_expr.arguments = arguments; // arguments 是一个 NodeList*
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -280,6 +287,10 @@ void free_ast(ASTNode *node) {
             free_ast(node->data.conditional_expr.test);
             free_ast(node->data.conditional_expr.consequent);
             free_ast(node->data.conditional_expr.alternate);
+            break;
+        case NODE_NEW_EXPRESSION:
+            free_ast(node->data.new_expr.callee);
+            nodelist_free(node->data.new_expr.arguments); // nodelist_free 会处理 NULL
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -469,6 +480,19 @@ void print_ast(ASTNode *node, int indent) {
             print_ast(node->data.conditional_expr.consequent, indent + 2);
             print_indent(indent + 1); printf("alternate:\n");
             print_ast(node->data.conditional_expr.alternate, indent + 2);
+            break;
+        case NODE_NEW_EXPRESSION:
+            printf("NewExpression\n");
+            print_indent(indent + 1); printf("callee:\n");
+            print_ast(node->data.new_expr.callee, indent + 2);
+            print_indent(indent + 1); printf("arguments:\n");
+            if (node->data.new_expr.arguments) {
+                // new MyClass()
+                nodelist_print(node->data.new_expr.arguments, indent + 2);
+            } else {
+                // new MyClass
+                print_indent(indent + 2); printf("[] (empty - no parens)\n");
+            }
             break;
         case NODE_WHILE_STATEMENT:
             printf("WhileStatement\n");

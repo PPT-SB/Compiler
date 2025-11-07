@@ -101,7 +101,7 @@ int yylex(void)
 %left PLUS MINUS
 %left MUL MOD
 %right POWER
-%right NOT BIT_NOT TYPEOF VOID DELETE AWAIT // 分离了 INC/DEC
+%right NEW NOT BIT_NOT TYPEOF VOID DELETE AWAIT
 %right INC DEC // 前缀自增/自减
 %nonassoc UPOSTFIX // 模拟后缀
 %left DOT LBRACK
@@ -480,13 +480,15 @@ left_hand_side_expression:
 new_expression:
     member_expression
     { $$ = $1; }
-/* ... TODO: new 表达式规则 ... */
+|   NEW new_expression // 处理: new MyClass (无括号)
+    { $$ = create_new_expression($2, NULL); }
 ;
 
 call_expression:
     member_expression arguments
     { $$ = create_call_expression($1, $2); }
-/* ... 其他调用表达式 (super(), import()) ... */
+|   NEW new_expression arguments // 处理: new MyClass() (带括号)
+    { $$ = create_new_expression($2, $3); }
 ;
 
 member_expression:

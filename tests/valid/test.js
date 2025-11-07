@@ -31,5 +31,6 @@ function myTest() {
 
     return a > 40 ? 1 : 0;
 }
-
+let d = new myTest();   // 测试 new MyClass()
+let e = new myTest;
 myTest();
