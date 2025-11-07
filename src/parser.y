@@ -80,6 +80,9 @@ int yylex(void)
 %type <node> expression_opt
 %type <node> break_statement
 %type <node> continue_statement
+%type <node> try_statement
+%type <node> catch_clause
+%type <node> finally_clause
 %type <node> switch_statement
 %type <list> switch_case_list
 %type <node> switch_case
@@ -157,6 +160,8 @@ statement:
 | continue_statement
     { $$ = $1; }
 | switch_statement
+    { $$ = $1; }
+| try_statement
     { $$ = $1; }
 ;
 
@@ -290,6 +295,29 @@ switch_statement:
     { $$ = create_switch_statement($3, $6); }
 ;
 
+try_statement:
+    // try { ... } catch (e) { ... }
+    TRY block_statement catch_clause
+    { $$ = create_try_statement($2, $3, NULL); }
+
+    // try { ... } finally { ... }
+|   TRY block_statement finally_clause
+    { $$ = create_try_statement($2, NULL, $3); }
+
+    // try { ... } catch (e) { ... } finally { ... }
+|   TRY block_statement catch_clause finally_clause
+    { $$ = create_try_statement($2, $3, $4); }
+;
+
+catch_clause:
+    CATCH LPAREN IDENTIFIER RPAREN block_statement
+    { $$ = create_catch_clause(create_identifier_node($3), $5); }
+;
+
+finally_clause:
+    FINALLY block_statement
+    { $$ = $2; } // finally 子句只是一个 BlockStatement
+;
 // switch_case_list 负责构建 SwitchCase 节点的 NodeList
 switch_case_list:
     /* empty */

@@ -140,6 +140,21 @@ ASTNode* create_new_expression(ASTNode *callee, NodeList *arguments) {
     return node;
 }
 
+ASTNode* create_try_statement(ASTNode *block, ASTNode *handler, ASTNode *finalizer) {
+    ASTNode *node = create_base_node(NODE_TRY_STATEMENT);
+    node->data.try_stmt.block = block;
+    node->data.try_stmt.handler = handler;
+    node->data.try_stmt.finalizer = finalizer;
+    return node;
+}
+
+ASTNode* create_catch_clause(ASTNode *param, ASTNode *body) {
+    ASTNode *node = create_base_node(NODE_CATCH_CLAUSE);
+    node->data.catch_clause.param = param;
+    node->data.catch_clause.body = body;
+    return node;
+}
+
 ASTNode* create_expression_statement(ASTNode *expression) {
     ASTNode *node = create_base_node(NODE_EXPRESSION_STATEMENT);
     node->data.expr_stmt.expression = expression;
@@ -291,6 +306,15 @@ void free_ast(ASTNode *node) {
         case NODE_NEW_EXPRESSION:
             free_ast(node->data.new_expr.callee);
             nodelist_free(node->data.new_expr.arguments); // nodelist_free 会处理 NULL
+            break;
+        case NODE_TRY_STATEMENT:
+            free_ast(node->data.try_stmt.block);
+            free_ast(node->data.try_stmt.handler);
+            free_ast(node->data.try_stmt.finalizer);
+            break;
+        case NODE_CATCH_CLAUSE:
+            free_ast(node->data.catch_clause.param);
+            free_ast(node->data.catch_clause.body);
             break;
         case NODE_EXPRESSION_STATEMENT:
             free_ast(node->data.expr_stmt.expression);
@@ -493,6 +517,22 @@ void print_ast(ASTNode *node, int indent) {
                 // new MyClass
                 print_indent(indent + 2); printf("[] (empty - no parens)\n");
             }
+            break;
+        case NODE_TRY_STATEMENT:
+            printf("TryStatement\n");
+            print_indent(indent + 1); printf("block:\n");
+            print_ast(node->data.try_stmt.block, indent + 2);
+            print_indent(indent + 1); printf("handler:\n");
+            print_ast(node->data.try_stmt.handler, indent + 2); // handler 为 NULL 时会打印 (null)
+            print_indent(indent + 1); printf("finalizer:\n");
+            print_ast(node->data.try_stmt.finalizer, indent + 2); // finalizer 为 NULL 时会打印 (null)
+            break;
+        case NODE_CATCH_CLAUSE:
+            printf("CatchClause\n");
+            print_indent(indent + 1); printf("param:\n");
+            print_ast(node->data.catch_clause.param, indent + 2);
+            print_indent(indent + 1); printf("body:\n");
+            print_ast(node->data.catch_clause.body, indent + 2);
             break;
         case NODE_WHILE_STATEMENT:
             printf("WhileStatement\n");

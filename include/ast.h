@@ -22,6 +22,8 @@ typedef enum {
     NODE_SWITCH_CASE,
     NODE_CONDITIONAL_EXPRESSION,
     NODE_NEW_EXPRESSION,
+    NODE_TRY_STATEMENT,
+    NODE_CATCH_CLAUSE,
     NODE_EXPRESSION_STATEMENT,
     NODE_RETURN_STATEMENT,
     NODE_FUNCTION_DECLARATION,
@@ -161,6 +163,19 @@ typedef struct ASTNode {
             NodeList *arguments; // 可以是 NULL (如果 new MyClass; 没有括号)
         } new_expr;
 
+        // NODE_TRY_STATEMENT
+        struct {
+            struct ASTNode *block;     // 'try' 块 (BlockStatement)
+            struct ASTNode *handler;   // 'catch' 子句 (CatchClause 或 NULL)
+            struct ASTNode *finalizer; // 'finally' 块 (BlockStatement 或 NULL)
+        } try_stmt;
+
+        // NODE_CATCH_CLAUSE
+        struct {
+            struct ASTNode *param; // 'catch (e)' 中的 'e' (Identifier)
+            struct ASTNode *body;  // 'catch' 块 (BlockStatement)
+        } catch_clause;
+
         // NODE_EXPRESSION_STATEMENT
         struct {
             struct ASTNode *expression;
@@ -235,6 +250,8 @@ ASTNode* create_switch_statement(ASTNode* discriminant, NodeList* cases);
 ASTNode* create_switch_case(ASTNode* test, NodeList* statements);
 ASTNode* create_conditional_expression(ASTNode *test, ASTNode *consequent, ASTNode *alternate);
 ASTNode* create_new_expression(ASTNode *callee, NodeList *arguments);
+ASTNode* create_try_statement(ASTNode *block, ASTNode *handler, ASTNode *finalizer);
+ASTNode* create_catch_clause(ASTNode *param, ASTNode *body);
 ASTNode* create_expression_statement(ASTNode *expression);
 ASTNode* create_return_statement(ASTNode *argument);
 ASTNode* create_function_declaration(ASTNode *id, NodeList *params, ASTNode *body);

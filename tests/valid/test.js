@@ -27,7 +27,15 @@ function myTest() {
         default:
             a = 0;
     }
-    // <-- a 在这里应该是 50 -->
+
+    try {
+        a = a + 1; // a 变为 51
+    } catch (err) {
+        a = 0;
+    } finally {
+        a = a + 10; // a 变为 61
+    }
+    // a 在这里应该是 61
 
     return a > 40 ? 1 : 0;
 }
